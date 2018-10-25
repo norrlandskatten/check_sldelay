@@ -1,0 +1,203 @@
+#!/bin/bash
+
+### check_sldelay
+### Version 0.1
+### Author Martin Säfdal
+###
+### Nagios plugin that check delays in Stockholms public transport
+
+#User defined variable
+APIKEY="PASTE_YOUR_KEY_HERE"
+
+#Define functions
+print_help() {
+    echo "
+check_sldelay
+Version: 0.1
+
+Help message for check_sldelay
+
+Usage: check_sldelay -T <type> -s <site> -w <warning-minutes> -c <critical-minutes> -W <warning-percent> -C <critical-percent>
+
+Options:
+
+  --help or -h
+      Print help message
+
+  --version or -V
+      Print version of plugin
+
+  --type or -T
+      Select type of transportation
+      valid input is BUS, METRO or TRAIN
+
+  --site or -s
+      Specify site to check delay at
+      siteid from SL Platsuppslag
+      example 1002 for centralen or 9192 for slussen
+
+  --warning-minutes or -w
+      Warning threshold in minutes
+
+  --critical-minutes or -c
+      Critical threshold in minutes
+
+  --warning-percent or -W
+      Warning threshold in percent
+
+  --critical-percent or -C
+      Critical threshold in percent
+
+Example:
+
+  $ /opt/plugins/custom/check_sldelay -T METRO -s 9192 -w 1 -c 10 -W 1 -C 20
+  CRITICAL - 25 percent of the departures are more than 10 minute(s) delayed | 'percent'=25%;1;20;;
+
+"
+}
+
+#Test arguments
+if [[ -z "$1" ]]; then
+	echo "Missing some mandatory parameters"
+	echo ""
+	print_help
+	exit 3
+fi
+
+#Get input variables
+while [[ -n "$1" ]]; do
+    case "$1" in
+	--help|-h)
+		print_help
+		exit 3
+		;;
+	--version|-V)
+		echo "check_sldelay 0.1"
+		exit 3
+		;;
+	--type|-T)
+		TYPE=$2
+		if [[ $TYPE == "BUS" ]];then
+			TYPE="Buses"
+		elif [[ $TYPE == "METRO" ]];then
+			TYPE="Metros"
+		elif [[ $TYPE == "TRAIN" ]];then
+			TYPE="Trains"
+		else
+			echo "Wrong type, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+		shift
+		;;
+	--site|-s)
+		SITE=$2
+		if ! [[ $SITE =~ ^[0-9]+$ ]];then
+			echo "Wrong site, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+		shift
+		;;
+	--warning-minutes|-w)
+		WARMIN=$2
+		if ! [[ $WARMIN =~ ^[0-9]+$ ]];then
+			echo "Wrong warning minutes, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+		shift
+		;;
+	--critical-minutes|-c)
+		CRIMIN=$2
+		if ! [[ $CRIMIN =~ ^[0-9]+$ ]];then
+			echo "Wrong critical minutes, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+		shift
+		;;
+	--warning-percent|-W)
+		WARPER=$2
+		if ! [[ $WARPER =~ ^[0-9]+$ ]];then
+			echo "Wrong warning percent, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+		shift
+		;;
+	--critical-percent|-C)
+		CRIPER=$2
+		if ! [[ $CRIPER =~ ^[0-9]+$ ]];then
+			echo "Wrong critical percent, see help"
+			echo ""
+			print_help
+			exit 3
+		fi
+ 		shift
+		;;
+	*)
+		echo "Unknown argument: $1"
+		print_help
+		exit 3
+		;;
+        esac
+    shift
+done
+
+#Define work variables
+WARSEC=$[$WARMIN*60]
+
+#Get raw data from API
+JSON=$(curl 'http://api.sl.se/api2/realtimedeparturesV4.json?key='"$APIKEY"'&siteid='"$SITE"'' 2>/dev/null)
+
+#Convert wanted values from json to bash array
+readarray -t ARR1 < <(echo $JSON | jq -r '.ResponseData.'"$TYPE"'[].TimeTabledDateTime')
+readarray -t ARR2 < <(echo $JSON | jq -r '.ResponseData.'"$TYPE"'[].ExpectedDateTime')
+
+#Compare TimeTabledDateTime with ExpectedDateTime
+while [[ $IM -lt ${#ARR1[@]} ]];do
+
+	#Convert datetime to epoch time and compare
+	TIME1=$(date -d "${ARR1[$IM]}" "+%s")
+	TIME2=$(date -d "${ARR2[$IM]}" "+%s")
+	TEMPDIFF=$(echo $TIME2-$TIME1 | bc)
+
+		#If diff between TimeTabledDateTime and ExpectedDateTime is greater than threshold add counter
+		if [[ $TEMPDIFF -gt $WARSEC ]];then
+			COUNT=$[$COUNT+1]
+		fi
+
+	TEMPDIFF=0
+	IM=$[$IM+1]
+done
+
+#Do math
+if [[ $COUNT -eq 0 ]];then
+	PERCENT=0
+else
+	TOTAL=${#ARR1[@]}
+	PERCENTDEC=$(echo $COUNT/$TOTAL | bc -l)
+	PERCENTTEMP=$(echo $PERCENTDEC*100 | bc)
+	PERCENT=${PERCENTTEMP%.*}
+fi
+
+#Exit logic and perfdata
+if [[ $PERCENT -gt $WARPER  ]] && [[ $PERCENT -lt $CRIPER  ]];then
+        echo "WARNING - $PERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+        exit 1
+elif [[ $PERCENT -gt $CRIPER ]];then
+	echo "CRITICAL - $PERCENT percent of the departures are more than $CRIMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+	exit 2
+elif  [[ $PERCENT -lt $WARPER ]];then
+        echo "OK - $PERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+	exit 0
+else
+	echo "UNKNOWN - Investigate isssues"
+	exit 3
+fi
