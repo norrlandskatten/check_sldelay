@@ -152,6 +152,7 @@ done
 
 #Define work variables
 WARSEC=$[$WARMIN*60]
+CRISEC=$[$CRIMIN*60]
 
 #Get raw data from API
 JSON=$(curl 'http://api.sl.se/api2/realtimedeparturesV4.json?key='"$APIKEY"'&siteid='"$SITE"'' 2>/dev/null)
@@ -169,8 +170,11 @@ while [[ $IM -lt ${#ARR1[@]} ]];do
 	TEMPDIFF=$(echo $TIME2-$TIME1 | bc)
 
 		#If diff between TimeTabledDateTime and ExpectedDateTime is greater than threshold add counter
-		if [[ $TEMPDIFF -gt $WARSEC ]];then
-			COUNT=$[$COUNT+1]
+		if [[ $TEMPDIFF -ge $CRISEC ]];then
+			CRICOUNT=$[$CRICOUNT+1]
+		fi
+		if [[ $TEMPDIFF -ge $WARSEC ]];then
+			WARCOUNT=$[$WARCOUNT+1]
 		fi
 
 	TEMPDIFF=0
@@ -178,24 +182,33 @@ while [[ $IM -lt ${#ARR1[@]} ]];do
 done
 
 #Do math
-if [[ $COUNT -eq 0 ]];then
-	PERCENT=0
+if [[ $CRICOUNT -eq 0 ]];then
+	CRIPERCENT=0
+else
+        TOTAL=${#ARR1[@]}
+        CRIPERCENTDEC=$(echo $CRICOUNT/$TOTAL | bc -l)
+        CRIPERCENTTEMP=$(echo $CRIPERCENTDEC*100 | bc)
+        CRIPERCENT=${CRIPERCENTTEMP%.*}
+fi
+
+if [[ $WARCOUNT -eq 0 ]];then
+	WARPERCENT=0
 else
 	TOTAL=${#ARR1[@]}
-	PERCENTDEC=$(echo $COUNT/$TOTAL | bc -l)
-	PERCENTTEMP=$(echo $PERCENTDEC*100 | bc)
-	PERCENT=${PERCENTTEMP%.*}
+	WARPERCENTDEC=$(echo $WARCOUNT/$TOTAL | bc -l)
+	WARPERCENTTEMP=$(echo $WARPERCENTDEC*100 | bc)
+	WARPERCENT=${WARPERCENTTEMP%.*}
 fi
 
 #Exit logic and perfdata
-if [[ $PERCENT -ge $WARPER  ]] && [[ $PERCENT -lt $CRIPER  ]];then
-        echo "WARNING - $PERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+if [[ $WARPERCENT -ge $WARPER  ]] && [[ $CRIPERCENT -lt $CRIPER  ]];then
+        echo "WARNING - $WARPERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$WARPERCENT%;$WARPER;$CRIPER;;"
         exit 1
-elif [[ $PERCENT -ge $CRIPER ]];then
-	echo "CRITICAL - $PERCENT percent of the departures are more than $CRIMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+elif [[ $CRIPERCENT -ge $CRIPER ]];then
+	echo "CRITICAL - $CRIPERCENT percent of the departures are more than $CRIMIN minute(s) delayed | 'percent'=$CRIPERCENT%;$WARPER;$CRIPER;;"
 	exit 2
-elif  [[ $PERCENT -lt $WARPER ]];then
-        echo "OK - $PERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
+elif  [[ $WARPERCENT -lt $WARPER ]] && [[ $CRIPERCENT -lt $CRIPER ]];then
+        echo "OK - $WARPERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$WARPERCENT%;$WARPER;$CRIPER;;"
 	exit 0
 else
 	echo "UNKNOWN - Investigate isssues"
