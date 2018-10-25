@@ -188,10 +188,10 @@ else
 fi
 
 #Exit logic and perfdata
-if [[ $PERCENT -gt $WARPER  ]] && [[ $PERCENT -lt $CRIPER  ]];then
+if [[ $PERCENT -ge $WARPER  ]] && [[ $PERCENT -lt $CRIPER  ]];then
         echo "WARNING - $PERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
         exit 1
-elif [[ $PERCENT -gt $CRIPER ]];then
+elif [[ $PERCENT -ge $CRIPER ]];then
 	echo "CRITICAL - $PERCENT percent of the departures are more than $CRIMIN minute(s) delayed | 'percent'=$PERCENT%;$WARPER;$CRIPER;;"
 	exit 2
 elif  [[ $PERCENT -lt $WARPER ]];then
