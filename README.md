@@ -29,7 +29,7 @@ chmod +x /opt/plugins/custom/check_sldelay
 Edit check_sldelay and add your API key.
 
 ```
-vim /opt/plugins/custom/check_sldelay`
+vim /opt/plugins/custom/check_sldelay
 ```
 
 ```
