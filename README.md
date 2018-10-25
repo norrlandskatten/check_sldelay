@@ -5,20 +5,25 @@ Installation guide for OP5 Monitor below.
 
 ## Prerequisites
 **jq** installed on your OP5 Monitor server. Installation instructions can be found [here](https://stedolan.github.io/jq/download/).
+
 Install on CentOS7: `yum install jq`
 
 **Trafiklab** API key. You can obtain a API key for free at [trafiklab.se](https://www.trafiklab.se).
+
 Once you have created an account at Trafiklab you have to create a project and specify that you want to use the API for *SL Realtidsinformation 4*.
 
 ## Installation
 ### Download and prepare plugin
 Download the check_sldelay plugin to your monitoring host.
+
 `wget -O /opt/plugins/custom/check_sldelay url`
 
 Make it executable.
+
 `chmod +x /opt/plugins/custom/check_sldelay`
 
 Edit check_sldelay and add your API key.
+
 `vim /opt/plugins/custom/check_sldelay`
 
 ```
@@ -72,8 +77,11 @@ Add new command to OP5 Monitor.
 Navigate to Manage > Configure > Commands.
 
 Add the following information:
+
 **command_name:** `check_sldelay`
+
 **command_line:** `$USER1$/custom/check_sldelay -T $ARG1$ -s $ARG2$ -w $ARG3$ -c $ARG4$ -W $ARG5$ -C $ARG6$`
+
 
 Click "Submit" then "Save" to save the new command.
 
@@ -81,8 +89,11 @@ Click "Submit" then "Save" to save the new command.
 Navigate to the host object you want to use or create a new one and add a new service.
 
 Example:
+
 **service_description:** Delayed metros at Centralen
+
 **check_command:** check_sldelay
+
 **check_command_args:** METRO!1002!5!20!10!20
 
 Click "Submit" then "Save" to save the new service.
