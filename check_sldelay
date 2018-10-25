@@ -201,7 +201,7 @@ else
 fi
 
 #Exit logic and perfdata
-if [[ $WARPERCENT -ge $WARPER  ]] && [[ $CRIPERCENT -lt $CRIPER  ]];then
+if [[ $WARPERCENT -ge $WARPER ]] && [[ $CRIPERCENT -lt $CRIPER ]];then
         echo "WARNING - $WARPERCENT percent of the departures are more than $WARMIN minute(s) delayed | 'percent'=$WARPERCENT%;$WARPER;$CRIPER;;"
         exit 1
 elif [[ $CRIPERCENT -ge $CRIPER ]];then
