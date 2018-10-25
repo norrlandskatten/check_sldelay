@@ -172,11 +172,11 @@ while [[ $IM -lt ${#ARR1[@]} ]];do
 		#If diff between TimeTabledDateTime and ExpectedDateTime is greater than threshold add counter
 		if [[ $TEMPDIFF -ge $CRISEC ]];then
 			CRICOUNT=$[$CRICOUNT+1]
-		fi
-		if [[ $TEMPDIFF -ge $WARSEC ]];then
 			WARCOUNT=$[$WARCOUNT+1]
 		fi
-
+		if [[ $TEMPDIFF -ge $WARSEC ]] && [[ $TEMPDIFF -lt $CRISEC ]];then
+			WARCOUNT=$[$WARCOUNT+1]
+		fi
 	TEMPDIFF=0
 	IM=$[$IM+1]
 done
