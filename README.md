@@ -16,7 +16,7 @@ Once you have created an account at Trafiklab you have to create a project and s
 ### Download and prepare plugin
 Download the check_sldelay plugin to your monitoring host.
 
-`wget -O /opt/plugins/custom/check_sldelay url`
+`wget -O /opt/plugins/custom/check_sldelay https://raw.githubusercontent.com/norrlandskatten/check_sldelay/master/check_sldelay`
 
 Make it executable.
 
