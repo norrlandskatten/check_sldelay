@@ -16,15 +16,21 @@ Once you have created an account at Trafiklab you have to create a project and s
 ### Download and prepare plugin
 Download the check_sldelay plugin to your monitoring host.
 
-`wget -O /opt/plugins/custom/check_sldelay https://raw.githubusercontent.com/norrlandskatten/check_sldelay/master/check_sldelay`
+```
+wget -O /opt/plugins/custom/check_sldelay https://raw.githubusercontent.com/norrlandskatten/check_sldelay/master/check_sldelay
+```
 
 Make it executable.
 
-`chmod +x /opt/plugins/custom/check_sldelay`
+```
+chmod +x /opt/plugins/custom/check_sldelay
+```
 
 Edit check_sldelay and add your API key.
 
-`vim /opt/plugins/custom/check_sldelay`
+```
+vim /opt/plugins/custom/check_sldelay`
+```
 
 ```
 [...]
@@ -90,10 +96,10 @@ Navigate to the host object you want to use or create a new one and add a new se
 
 Example:
 
-**service_description:** Delayed metros at Centralen
+**service_description:** `Delayed metros at Centralen`
 
-**check_command:** check_sldelay
+**check_command:** `check_sldelay`
 
-**check_command_args:** METRO!1002!5!20!10!20
+**check_command_args:** `METRO!1002!5!20!10!20`
 
 Click "Submit" then "Save" to save the new service.
