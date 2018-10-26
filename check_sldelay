@@ -173,8 +173,7 @@ while [[ $IM -lt ${#ARR1[@]} ]];do
 		if [[ $TEMPDIFF -ge $CRISEC ]];then
 			CRICOUNT=$[$CRICOUNT+1]
 			WARCOUNT=$[$WARCOUNT+1]
-		fi
-		if [[ $TEMPDIFF -ge $WARSEC ]] && [[ $TEMPDIFF -lt $CRISEC ]];then
+		elif [[ $TEMPDIFF -ge $WARSEC ]] && [[ $TEMPDIFF -lt $CRISEC ]];then
 			WARCOUNT=$[$WARCOUNT+1]
 		fi
 	TEMPDIFF=0
